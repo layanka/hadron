@@ -55,6 +55,7 @@ def joystick_control():
 # Lancer le contrôle par joystick dans un thread séparé
 joystick_thread = threading.Thread(target=joystick_control, daemon=True)
 joystick_thread.start()
+#joystick_thread.join()
 
 def generate_frames():
     while True:
@@ -96,6 +97,12 @@ def index():
                     }
                     .controls {
                         display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    .row {
+                        display: flex;
                         justify-content: center;
                         gap: 10px;
                     }
@@ -130,11 +137,17 @@ def index():
                         <img src="{{ url_for('video_feed') }}" width="640" height="480">
                     </div>
                     <div class="controls">
-                        <button onclick="sendCommand('forward')">Avancer</button>
-                        <button onclick="sendCommand('backward')">Reculer</button>
-                        <button onclick="sendCommand('left')">Gauche</button>
-                        <button onclick="sendCommand('right')">Droit</button>
-                        <button onclick="sendCommand('stop')">Arrêt</button>
+                        <div class="row">
+                            <button onclick="sendCommand('forward')">Avancer</button>
+                        </div>
+                        <div class="row">
+                            <button onclick="sendCommand('left')">Gauche</button>
+                            <button onclick="sendCommand('stop')">Arrêt</button>
+                            <button onclick="sendCommand('right')">Droit</button>
+                        </div>
+                        <div class="row">
+                            <button onclick="sendCommand('backward')">Reculer</button>
+                        </div>
                     </div>
                     <div id="mess"> Ou utilise les flèches du clavier (barre d'espacement pour arrêter)</div>
                     <div id="messages"></div>

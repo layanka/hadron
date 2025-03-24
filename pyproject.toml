@@ -5,13 +5,8 @@ description = "Robot en devenir"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "adafruit-crickit",
-    "atexit",
+    "adafruit-circuitpython-crickit>=2.3.19",
     "flask>=3.1.0",
-    "io",
-    "libcamera",
-    "picamera2",
-    "struct",
-    "threading",
-    "time",
+    "lgpio>=0.2.2.0",
+    "picamera2>=0.3.25",
 ]
