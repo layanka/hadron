@@ -12,6 +12,7 @@ import time
 import atexit
 from adafruit_crickit import crickit
 
+
 class RobotCar:
     def __init__(self, left_trim=0, right_trim=0, stop_at_exit=True):
         """Create an instance of the robot.  Can specify the following optional

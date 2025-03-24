@@ -10,3 +10,9 @@ dependencies = [
     "lgpio>=0.2.2.0",
     "picamera2>=0.3.25",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "ruff>=0.11.2",
+]

@@ -1,7 +1,8 @@
 import struct
 
+
 class JoystickReader:
-    def __init__(self, device_path='/dev/input/js0'):
+    def __init__(self, device_path="/dev/input/js0"):
         self.device_path = device_path
         self.EVENT_FORMAT = "IhBB"  # (time, value, type, number)
         self.EVENT_SIZE = struct.calcsize(self.EVENT_FORMAT)
@@ -19,17 +20,21 @@ class JoystickReader:
                         break
 
                     # Décomposer l'événement
-                    time, value, event_type, number = struct.unpack(self.EVENT_FORMAT, event)
+                    time, value, event_type, number = struct.unpack(
+                        self.EVENT_FORMAT, event
+                    )
 
                     yield {
                         "time": time,
                         "value": value,
                         "type": event_type,
-                        "number": number
+                        "number": number,
                     }
         except FileNotFoundError:
-            print(f"Device {self.device_path} not found. Make sure the controller is connected.")
+            print(
+                f"Device {self.device_path} not found. Make sure the controller is connected."
+            )
         except PermissionError:
-            print(f"Permission denied. Try running the script with sudo.")
+            print("Permission denied. Try running the script with sudo.")
         except OSError as e:
             print(f"Error accessing {self.device_path}: {e}")

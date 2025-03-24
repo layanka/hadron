@@ -1,6 +1,7 @@
 import io
 from threading import Condition
 
+
 # Class to handle streaming output
 class StreamingOutput(io.BufferedIOBase):
     def __init__(self):
