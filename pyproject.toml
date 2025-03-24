@@ -1,0 +1,17 @@
+[project]
+name = "hadron"
+version = "0.1.0"
+description = "Robot en devenir"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "adafruit-crickit",
+    "atexit",
+    "flask>=3.1.0",
+    "io",
+    "libcamera",
+    "picamera2",
+    "struct",
+    "threading",
+    "time",
+]
