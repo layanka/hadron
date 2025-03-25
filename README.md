@@ -1,6 +1,11 @@
 # Hadron
 The goal is to build a robot with more and more capabilities.
 
+At this point (March 2025), the robot:
+  - Is programmed with Python
+  - Can be controlled through a web page (Flask server) which allows to control it via buttons on the web page, your keyboard or a bluetooth game controller.
+  - Streams live video on the web page
+
 #### For hardware, it is based on:
 
 Raspberry Pi 5 (wil work with other versions) : https://www.raspberrypi.com/products/raspberry-pi-5/
@@ -18,7 +23,9 @@ Adafruit crickit HAT: https://www.adafruit.com/product/3957
 For mobility:
 - Mini Robot Rover Chassis Kit (you'll need extra spacers if you have the AI Kit as well)
 - A simple 4xAA holder (similar to https://www.adafruit.com/product/830) to power the Crickit
-- A power bank to power the Raspberry Pi. hard to find a good one for the Pi 5. This one works: https://www.amazon.ca/-/fr/dp/B0DD3JZ1QR?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1
+- A power bank to power the Raspberry Pi. hard to find a good one for the Pi 5. This one works: https://www.amazon.ca/-/fr/dp/B0DD3JZ1QR?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1. Look for something small, with at least one output of 25W+. The Pi 5 needs 5V and 3A, I have not found any that fits the bill perfectly, aside from dedicated solutions in the type a UPS with extension circuit board which might be what you're looking for if you're looking for a robust solution.
+
+Note that nothing fits perfectly here: Staking 3 boards requires extra parts (pin extensions, etc.), the Rover Kit was not meant for the Pi 5 originally and not for 3 boards, you will need to strip some wires, etc.
 
 
 
