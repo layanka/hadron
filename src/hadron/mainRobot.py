@@ -25,6 +25,8 @@ output = StreamingOutput()
 picam2.start_recording(JpegEncoder(), FileOutput(output))
 
 robot = RobotCar()
+if (robot._dummy):
+    print("Adafruit MotorHat not found. Running in dummy mode.")
 joystick = JoystickReader("/dev/input/js0")
 
 # Variables globales pour le joystick
