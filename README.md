@@ -56,3 +56,4 @@ Finalement, si ``sudo uv`` ne fonctionne pas, créez un lien:
     sudo ln ~/.local/bin/uv uv
 
 Redémarrez votre RaspberryPi et en allumant votre controlleur, le serveur Flask démarrera automatiquement.
+Note: Le serveur démarre et nous pouvons contrôler le robot par joystick, par contre le site web n'est pas accessible. À vérifier.
