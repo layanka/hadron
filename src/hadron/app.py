@@ -11,29 +11,39 @@ import threading
 import time
 
 app = Flask(__name__)
+##
+# Our robot instance.
+# If the iC2 from the Adafruit board is not ready, the server will still start but the robot won't move
+# Basically, just the camera will work.
+##
+robot = RobotCar()
+if (robot._dummy):
+    print("Adafruit MotorHat not found. Running in dummy mode.")
 
+##
 # Configure and start the camera stream
+# We are reducing the quality so the streaming is smoother
+##
 picam2 = Picamera2()
 config = picam2.create_video_configuration(
     main={"size": (320, 240)}
-)  # Réduire à 320x240
+)  # Reduced to 320x240
 config["transform"] = libcamera.Transform(hflip=1, vflip=1)
 picam2.configure(config)
-picam2.set_controls({"FrameRate": 15.0})  # Limiter à 15 FPS
+picam2.set_controls({"FrameRate": 15.0})  # Limited to 15 FPS
 picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
 output = StreamingOutput()
 picam2.start_recording(JpegEncoder(), FileOutput(output))
 
-robot = RobotCar()
-if (robot._dummy):
-    print("Adafruit MotorHat not found. Running in dummy mode.")
+##
+# Create a joystick instance, configure it
+# Define how it's going to work (you can modify it as you please, ex: a button for speed change, etc.)
+# And start monitoring it in a sepearet thread.
+##
 joystick = JoystickReader("/dev/input/js0")
-
-# Variables globales pour le joystick
 joystick_speed = 0.0
 joystick_steering = 0.0
-joystick_active = True  # Permet d'activer/désactiver le contrôle par joystick
-
+joystick_active = True  # Deactivate joystick control if you don't want it
 
 def joystick_control():
     global joystick_speed, joystick_steering, joystick_active
@@ -42,23 +52,22 @@ def joystick_control():
             if not joystick_active:
                 continue
 
-            if event["type"] == 2:  # Axes (type 2)
+            if event["type"] == 2:  # Axis (type 2)
                 if event["number"] == 2:  # Axis 2 (steering left/right)
-                    joystick_steering = event["value"] / 32767.0  # Normaliser [-1, 1]
+                    joystick_steering = event["value"] / 32767.0  # Normalize to [-1, 1]
                 elif event["number"] == 3:  # Axis 3 (speed forward/backward)
-                    joystick_speed = event["value"] / 32767.0  # Normaliser [-1, 1]
+                    joystick_speed = event["value"] / 32767.0  # Normalize to [-1, 1]
 
-            # Appliquer les commandes au robot
+            # Send command to robot
             robot.steer(joystick_speed, joystick_steering)
 
-            # Petite pause pour éviter une surcharge CPU
+            # To make sure we don,t overload the CPU
             time.sleep(0.01)
     except KeyboardInterrupt:
         print("Joystick control stopped.")
         robot.stop()
 
-
-# Lancer le contrôle par joystick dans un thread séparé
+# Read the joystick in a sperate thread
 joystick_thread = threading.Thread(target=joystick_control, daemon=True)
 joystick_thread.start()
 # joystick_thread.join()
