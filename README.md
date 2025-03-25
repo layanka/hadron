@@ -1,61 +1,78 @@
 # Hadron
 
-## Démarrage
+## Getting Started
 
+You can install `uv` by following: [installation instructions](https://docs.astral.sh/uv/getting-started/installation/)
 
-Vous pouvez installer ``uv`` en suivant: https://docs.astral.sh/uv/getting-started/installation/
+To install `picamera2` under `uv`, you will need to run the following commands before starting `uv run`:
 
-Pour installer ``picamera2`` sous ``uv``, vous devrez exécuter les commandes suivantes avant de démarrer ``uv run``:
+```bash
+sudo apt update && sudo apt upgrade
+sudo apt install libcap-dev libatlas-base-dev ffmpeg libopenjp2-7
+sudo apt install libcamera-dev
+sudo apt install libkms++-dev libfmt-dev libdrm-dev
+```
 
-    sudo apt update && sudo apt upgrade
-    sudo apt install libcap-dev libatlas-base-dev ffmpeg libopenjp2-7
-    sudo apt install libcamera-dev
-    sudo apt install libkms++-dev libfmt-dev libdrm-dev
+Then, in the cloned directory on your machine:
 
-Ensuite, dans le répertoire cloné sur votre machine:
+```bash
+uv pip install wheel
+uv pip install rpi-libcamera rpi-kms picamera2
+```
 
-    uv pip install wheel
-    uv pip install rpi-libcamera rpi-kms picamera2
+You will also need `lgpio`:
 
-Vous aurez aussi besoin de ``lgpio``:
+```bash
+sudo apt install swig
+sudo apt install liblgpio-dev
+```
 
-    sudo apt install swig
-    sudo apt install liblgpio-dev
+You can then start the Flask server:
 
-Vous pourrez ensuite démarrer le serveur Flask:
+```bash
+uv run src/hadron/app.py
+```
 
-    uv run src/hadron/app.py
+## Miscellaneous
 
-## Miscallenious
+### Automatic server start at the connection of a game controller
 
-### Démarrage automatique du serveur à la connexion d'un controlleur de jeux
+You can use `udev` to automatically start the Flask server when a game controller connection is established.
 
-On peut utiliser ``udev`` pour démarrer automatiquement le serveur Flask quand une connection à un controlleur de jeux est établie.
+Create a script that starts your server:
 
-Créez un script qui démarre votre serveur:
+```bash
+cd ~/.local/bin/
+nano trigger_bot_on_joystick.sh
+sudo chmod +x trigger_bot_on_joystick.sh
+```
 
-    cd ~/.local/bin/
-    nano trigger_bot_on_joystick.sh
-    sudo chmod +x trigger_bot_on_joystick.sh
+Add the following lines to the new file:
 
-Ajoutez les lignes suivantes au nouveau fichier:
+```bash
+cd /home/USERNAME/PATH_TO_PROJECTDIR
+uv run src/hadron/app.py
+```
 
-    cd /home/USERNAME/PATH_TO_PROJECTDIR
-    uv run src/hadron/app.py
+Create a link in `/usr/local/bin/`:
 
-Créez un lien dans ``/usr/local/bin/``:
+```bash
+cd /usr/local/bin
+sudo ln ~/.local/bin/trigger_bot_on_joystick.sh
+```
 
-    cd /usr/local/bin
-    sudo ln ~/.local/bin/trigger_bot_on_joystick.sh
+Create or add the following line to `/etc/udev/rules.d/80-local.rules`:
 
-Créez ou ajouter la ligne suivante à ``/etc/udev/rules.d/80-local.rules``:
+```bash
+KERNEL=="js0", SUBSYSTEM=="input", ACTION=="add", RUN+="/usr/local/bin/trigger_bot_on_joystick.sh"
+```
 
-    KERNEL=="js0", SUBSYSTEM=="input", ACTION=="add", RUN+="/usr/local/bin/trigger_bot_on_joystick.sh"
+Finally, if `sudo uv` does not work, create a link:
 
-Finalement, si ``sudo uv`` ne fonctionne pas, créez un lien:
+```bash
+cd /usr/local/bin
+sudo ln ~/.local/bin/uv uv
+```
 
-    cd /usr/local/bin
-    sudo ln ~/.local/bin/uv uv
-
-Redémarrez votre RaspberryPi et en allumant votre controlleur, le serveur Flask démarrera automatiquement.
-Note: Le serveur démarre et nous pouvons contrôler le robot par joystick, par contre le site web n'est pas accessible. À vérifier.
+Restart your RaspberryPi and upon turning on your controller, the Flask server will automatically start.
+Note: The server starts and we can control the robot by joystick, however, the website is not accessible. To be verified.
