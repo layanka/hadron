@@ -1,4 +1,26 @@
 # Hadron
+The goal is to build a robot with more and more capabilities.
+
+#### For hardware, it is based on:
+
+Raspberry Pi 5 (wil work with other versions) : https://www.raspberrypi.com/products/raspberry-pi-5/
+  - I think that other versions would work better for portable solution
+    
+(still unused so far) Raspberry Pi AI Kit (will work with the Raspberry Pi AI HAT+) : https://www.raspberrypi.com/products/ai-kit/
+  - I plan to leverage this but a lot (most) of AI solutions can still be implemented without a dedicated AI module.
+    
+Raspberry Pi Camera Module 3 : https://www.raspberrypi.com/products/camera-module-3/
+  - Other cameras can be used, code might need tweeking
+
+Adafruit crickit HAT: https://www.adafruit.com/product/3957
+  - The Motor Hat might be sufficient if you don't use the other capabilities of the Crickit
+
+For mobility:
+- Mini Robot Rover Chassis Kit (you'll need extra spacers if you have the AI Kit as well)
+- A simple 4xAA holder (similar to https://www.adafruit.com/product/830) to power the Crickit
+- A power bank to power the Raspberry Pi. hard to find a good one for the Pi 5. This one works: https://www.amazon.ca/-/fr/dp/B0DD3JZ1QR?ref=ppx_yo2ov_dt_b_fed_asin_title&th=1
+
+
 
 ## Getting Started
 
