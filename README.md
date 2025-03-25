@@ -1,5 +1,7 @@
-Démarrage
----------------
+# Hadron
+
+## Démarrage
+
 
 Vous pouvez installer ``uv`` en suivant: https://docs.astral.sh/uv/getting-started/installation/
 
@@ -22,11 +24,11 @@ Vous aurez aussi besoin de ``lgpio``:
 
 Vous pourrez ensuite démarrer le serveur Flask:
 
-    uv run src/hadron/mainRobot.py
+    uv run src/hadron/app.py
 
+## Miscallenious
 
-Démarrage automatique du serveur à la connexion d'un controlleur de jeux
----------------
+### Démarrage automatique du serveur à la connexion d'un controlleur de jeux
 
 On peut utiliser ``udev`` pour démarrer automatiquement le serveur Flask quand une connection à un controlleur de jeux est établie.
 
@@ -39,7 +41,7 @@ Créez un script qui démarre votre serveur:
 Ajoutez les lignes suivantes au nouveau fichier:
 
     cd /home/USERNAME/PATH_TO_PROJECTDIR
-    uv run src/hadron/mainRobot.py
+    uv run src/hadron/app.py
 
 Créez un lien dans ``/usr/local/bin/``:
 
