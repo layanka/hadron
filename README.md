@@ -103,5 +103,5 @@ cd /usr/local/bin
 sudo ln ~/.local/bin/uv uv
 ```
 
-Restart your RaspberryPi and upon turning on your controller, the Flask server will automatically start.
+Restart your Raspberry Pi and upon turning on your controller, the Flask server will automatically start.
 Note: The server starts and we can control the robot by joystick, however, the website is not accessible. To be verified.

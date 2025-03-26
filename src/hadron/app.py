@@ -11,6 +11,7 @@ import threading
 import time
 
 app = Flask(__name__)
+
 ##
 # Our robot instance.
 # If the iC2 from the Adafruit board is not ready, the server will still start but the robot won't move
