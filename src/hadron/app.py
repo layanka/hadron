@@ -1,24 +1,26 @@
+import threading
+import time
+
+import libcamera
+from carController import RobotCar
 from flask import Flask, Response, render_template
+from joystickController import JoystickReader
+from libcamera import controls
 from picamera2 import Picamera2
 from picamera2.encoders import JpegEncoder
 from picamera2.outputs import FileOutput
-import libcamera
-from libcamera import controls
 from streamOutput import StreamingOutput
-from carController import RobotCar
-from joystickController import JoystickReader
-import threading
-import time
 
 app = Flask(__name__)
 
 ##
 # Our robot instance.
-# If the iC2 from the Adafruit board is not ready, the server will still start but the robot won't move
+# If the iC2 from the Adafruit board is not ready, the server will still start
+#   but the robot won't move.
 # Basically, just the camera will work.
 ##
 robot = RobotCar()
-if (robot._dummy):
+if robot._dummy:
     print("Adafruit MotorHat not found. Running in dummy mode.")
 
 ##
@@ -38,13 +40,15 @@ picam2.start_recording(JpegEncoder(), FileOutput(output))
 
 ##
 # Create a joystick instance, configure it
-# Define how it's going to work (you can modify it as you please, ex: a button for speed change, etc.)
+# Define how it's going to work (you can modify it as you please,
+#   ex: a button for speed change, etc.)
 # And start monitoring it in a sepearet thread.
 ##
 joystick = JoystickReader("/dev/input/js0")
 joystick_speed = 0.0
 joystick_steering = 0.0
 joystick_active = True  # Deactivate joystick control if you don't want it
+
 
 def joystick_control():
     global joystick_speed, joystick_steering, joystick_active
@@ -67,6 +71,7 @@ def joystick_control():
     except KeyboardInterrupt:
         print("Joystick control stopped.")
         robot.stop()
+
 
 # Read the joystick in a sperate thread
 joystick_thread = threading.Thread(target=joystick_control, daemon=True)
@@ -91,7 +96,7 @@ def video_feed():
 
 @app.route("/")
 def index():
-    return render_template("index.html")    
+    return render_template("index.html")
 
 
 @app.route("/command/<cmd>")

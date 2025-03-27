@@ -32,7 +32,8 @@ class JoystickReader:
                     }
         except FileNotFoundError:
             print(
-                f"Device {self.device_path} not found. Make sure the controller is connected."
+                f"""Device {self.device_path} not found. \
+Make sure the controller is connected."""
             )
         except PermissionError:
             print("Permission denied. Try running the script with sudo.")

@@ -8,8 +8,9 @@
 # I should make it more generic, but for now it is specific to my setup:
 #   the Left motor is on Motor 2 and mounted in reverse,
 #   the Right motor is on Motor 1.
-import time
 import atexit
+import time
+
 try:
     from adafruit_crickit import crickit
 
@@ -36,7 +37,8 @@ try:
             """Set the speed of the left motor, taking into account its trim offset."""
             speed += self._left_trim
             speed = max(-1, min(1, speed))  # Constrain speed to 0-255 after trimming.
-            # Since, in our case, the left motor is mounted in reverse, we need to invert the speed
+            # Since, in our case, the left motor is mounted in reverse,
+            #   we need to invert the speed
             speed = -speed
             crickit.dc_motor_2.throttle = speed
 
@@ -115,8 +117,9 @@ try:
             if seconds is not None:
                 time.sleep(seconds)
                 self.stop()
-                
-except: # If the Adafruit MotorHat is not available, create a dummy class
+
+except ValueError:  # If the Adafruit MotorHat is not available, create a dummy class
+
     class RobotCar:
         def __init__(self, left_trim=0, right_trim=0, stop_at_exit=True):
             self._left_trim = left_trim
@@ -125,25 +128,25 @@ except: # If the Adafruit MotorHat is not available, create a dummy class
 
         def _left_speed(self, speed):
             pass
-        
+
         def _right_speed(self, speed):
             pass
-        
+
         @staticmethod
         def stop():
             pass
-        
+
         def forward(self, speed, seconds=None):
             pass
-        
+
         def steer(self, speed, direction):
             pass
-        
+
         def backward(self, speed, seconds=None):
             pass
-        
+
         def right(self, speed, seconds=None):
             pass
-        
+
         def left(self, speed, seconds=None):
-           pass
+            pass
