@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+      "optimized-robot": {
+        "command": "uv",
+        "args": ["run /path/to/mcp_server_hadron.py"],
+        "env": {
+          "ROBOT_HOST": "192.168.1.100"
+        }
+      }
+    }
+  }

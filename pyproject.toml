@@ -8,6 +8,7 @@ dependencies = [
     "adafruit-circuitpython-crickit>=2.3.19",
     "flask>=3.1.0",
     "lgpio>=0.2.2.0",
+    "mcp>=1.9.0",
     "picamera2>=0.3.25",
 ]
 
