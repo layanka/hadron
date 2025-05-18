@@ -1,11 +1,12 @@
 {
-    "mcpServers": {
-      "optimized-robot": {
-        "command": "uv",
-        "args": ["run /path/to/mcp_server_hadron.py"],
-        "env": {
-          "ROBOT_HOST": "192.168.1.100"
-        }
+  "mcpServers": {
+    "hadron": {
+      "command": "/Users/philippe/Code/hadron/.venv/bin/python3",
+      "args": ["/Users/philippe/Code/hadron/src/hadron/mcp/mcp_server_hadron.py"],
+      "env": {
+        "ROBOT_HOST": "192.168.0.157",
+        "WEBSOCKET_HOST": "0.0.0.0"
       }
     }
   }
+}

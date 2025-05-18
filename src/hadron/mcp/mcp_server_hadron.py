@@ -23,7 +23,7 @@ from mcp.types import Resource, Tool, TextContent
 import mcp.types as types
 
 # Configuration
-ROBOT_HOST = "192.168.1.100"  # Change to your robot's IP
+ROBOT_HOST = "192.168.0.157"  # Change to your robot's IP
 ROBOT_PORT = 5000
 MAX_CACHED_FRAMES = 5
 FRAME_CACHE_TTL = 2.0  # seconds
@@ -82,7 +82,7 @@ class OptimizedRobotMCPServer:
         # Start WebSocket server for real-time commands
         try:
             self.ws_server = await websockets.serve(
-                self.websocket_handler, "localhost", 8765
+                self.websocket_handler, "0.0.0.0", 8765
             )
             print("WebSocket server started on ws://localhost:8765")
         except Exception as e:
