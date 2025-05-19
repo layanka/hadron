@@ -240,6 +240,7 @@ class OptimizedRobotMCPServer:
     
     async def websocket_handler(self, websocket, path):
         """Handle WebSocket connections for real-time control."""
+        print(f"WebSocket connection established from {websocket.remote_address}")
         self.ws_connection = websocket
         try:
             async for message in websocket:
