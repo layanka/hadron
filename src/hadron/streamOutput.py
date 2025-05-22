@@ -3,7 +3,7 @@ import threading
 
 
 # Class to handle streaming output
-class StreamingOutput:
+class StreamingOutput(io.BufferedIOBase):
     def __init__(self):
         self.frame = None
         self.condition = threading.Condition()

@@ -1,3 +1,4 @@
+from pickletools import optimize
 import threading
 import time
 from typing import List
@@ -18,8 +19,15 @@ from streamOutput import StreamingOutput
 
 # Initialisation de FastAPI
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+
+# Modifier le chemin des fichiers statiques pour utiliser un chemin absolu
+import os
+static_path = os.path.join(os.path.dirname(__file__), "static")
+app.mount("/static", StaticFiles(directory=static_path), name="static")
+
+# Utiliser le même principe pour les templates
+templates_path = os.path.join(os.path.dirname(__file__), "templates")
+templates = Jinja2Templates(directory=templates_path)
 
 ##
 # Our robot instance.
@@ -31,42 +39,7 @@ robot = RobotCar()
 if robot._dummy:
     print("Adafruit MotorHat not found. Running in dummy mode.")
 
-##
-# Configure and start the camera stream
-# We are reducing the quality so the streaming is smoother
-##
-picam2 = Picamera2()
-config = picam2.create_video_configuration(
-    main={
-        "size": (320, 240),
-        "format": "RGB888"  # Format plus efficace pour le streaming
-    },
-    buffer_count=4,  # Réduire la mémoire tampon
-    controls={
-        "FrameRate": 15.0,
-        "FrameDurationLimits": (66666, 66666),  # Force 15 FPS exactement
-        "AfMode": controls.AfModeEnum.Continuous,
-        "NoiseReductionMode": controls.draft.NoiseReductionModeEnum.Minimal,
-        "Brightness": 0.5,
-        "Contrast": 1.1,
-    }
-)  # Reduced to 320x240
-config["transform"] = libcamera.Transform(hflip=1, vflip=1)
-picam2.configure(config)
-picam2.set_controls({"FrameRate": 15.0})  # Limited to 15 FPS
-picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
-output = StreamingOutput()
 
-jpeg_encoder = JpegEncoder(
-    q=70,  # Qualité JPEG (0-100)
-    optimize=True,  # Optimisation Huffman
-    restart=8  # Marqueurs de resynchronisation
-)
-
-picam2.start_recording(
-    encoder=jpeg_encoder,
-    output=FileOutput(output)
-)
 
 ##
 # Create a joystick instance, configure it
@@ -79,6 +52,66 @@ joystick_speed = 0.0
 joystick_steering = 0.0
 joystick_active = True  # Deactivate joystick control if you don't want it
 
+
+
+# Déplacer la configuration de la caméra dans une classe
+class CameraManager:
+    def __init__(self):
+        self.picam2 = None
+        self.output = None
+        self.jpeg_encoder = None
+
+    def setup_camera(self):
+        if self.picam2 is not None:
+            return
+
+        self.picam2 = Picamera2()
+        config = self.picam2.create_video_configuration(
+            main={
+                "size": (320, 240),
+                "format": "RGB888"
+            },
+            buffer_count=4,
+            controls={
+                "FrameRate": 15.0,
+                "FrameDurationLimits": (66666, 66666),
+                "AfMode": controls.AfModeEnum.Continuous,
+                "NoiseReductionMode": controls.draft.NoiseReductionModeEnum.Minimal,
+                "Brightness": 0.5,
+                "Contrast": 1.1,
+            }
+        )
+        config["transform"] = libcamera.Transform(hflip=1, vflip=1)
+        self.picam2.configure(config)
+        self.output = StreamingOutput()
+        
+        self.jpeg_encoder = JpegEncoder(q=70)
+        
+        self.picam2.start_recording(
+            encoder=self.jpeg_encoder,
+            output=FileOutput(self.output)
+        )
+
+    def cleanup(self):
+        if self.picam2:
+            try:
+                self.picam2.stop_recording()
+                self.picam2.close()
+            except:
+                pass
+
+# Créer une instance unique
+camera_manager = CameraManager()
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialisation à l'startup de l'application."""
+    camera_manager.setup_camera()
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Nettoyage à l'arrêt de l'application."""
+    camera_manager.cleanup()
 
 def joystick_control():
     global joystick_speed, joystick_steering, joystick_active
@@ -109,13 +142,14 @@ joystick_thread.start()
 # joystick_thread.join()
 
 
+# Modifier generate_videostream pour utiliser camera_manager
 def generate_videostream():
     try:
         while True:
-            with output.condition:
-                if not output.condition.wait(timeout=2.0):  # Timeout de 2 secondes
+            with camera_manager.output.condition:
+                if not camera_manager.output.condition.wait(timeout=2.0):
                     continue
-                frame = output.frame
+                frame = camera_manager.output.frame
                 if frame is None:
                     continue
                 
@@ -127,7 +161,7 @@ def generate_videostream():
             )
     except Exception as e:
         print(f"Erreur de streaming: {e}")
-        picam2.stop_recording()
+        camera_manager.cleanup()
 
 
 @app.get("/")
@@ -238,13 +272,13 @@ import atexit
 atexit.register(cleanup_resources)
 
 
-# Démarrage avec uvicorn
+# Modifier le démarrage pour n'utiliser qu'un seul worker
 if __name__ == "__main__":
     uvicorn.run(
         "app:app",
         host="0.0.0.0",
         port=5000,
         reload=False,
-        workers=2,
+        workers=1,  # Réduit à 1 worker
         loop="uvloop"
     )

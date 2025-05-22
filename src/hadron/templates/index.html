@@ -1,7 +1,10 @@
+<!DOCTYPE html>
 <html>
     <head>
-        <title>Hadron, le petit robot</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+        <title>Hadron Control</title>
+        <!-- Utilisation correcte des fichiers statiques -->
+        <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
+        <script src="{{ url_for('static', path='/script.js') }}"></script>
     </head>
     <body>
         <h1>Contrôle Hadron!</h1>
