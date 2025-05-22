@@ -240,11 +240,23 @@ atexit.register(cleanup_resources)
 
 # Démarrage avec uvicorn
 if __name__ == "__main__":
-    uvicorn.run(
-        "app:app",
-        host="0.0.0.0",
-        port=5000,
-        reload=False,
-        workers=2,
-        loop="uvloop"
-    )
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "dev":
+        # Mode développement
+        uvicorn.run(
+            "app:app",
+            host="0.0.0.0",
+            port=5000,
+            reload=True,
+            workers=1
+        )
+    else:
+        # Mode production
+        uvicorn.run(
+            "app:app",
+            host="0.0.0.0",
+            port=5000,
+            reload=False,
+            workers=2,
+            loop="uvloop"
+        )
