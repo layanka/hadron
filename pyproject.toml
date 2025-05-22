@@ -5,17 +5,23 @@ description = "Robot en devenir"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "adafruit-circuitpython-crickit>=2.3.19",
-    "aiohttp>=3.11.18",
-    "flask>=3.1.0",
-    "lgpio>=0.2.2.0",
-    "mcp>=1.9.0",
-    "picamera2>=0.3.25",
-    "requests>=2.32.3",
-    "websockets>=15.0.1",
+   "websockets>=12.0", 
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
+robot = [
+    "adafruit-circuitpython-crickit>=2.3.19; platform_machine == 'armv7l'",
+    "lgpio>=0.2.2.0; platform_machine == 'armv7l'",
+    "picamera2>=0.3.25; platform_machine == 'armv7l'",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.1",
+]
+mcp = [
+     "httpx>=0.27.0",
+     "mcp>=1.9.0",
+     "numpy>=1.24.0",
+     "opencv-python>=4.8.0",
+]
 dev = [
     "pytest>=8.3.5",
     "ruff>=0.11.2",

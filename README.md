@@ -1,6 +1,12 @@
 # Hadron
 The goal is to build a robot with more and more capabilities.
 
+(May 21, 2025)
+To start the new FastAPI server:
+  python -m uvicorn app:app --host 0.0.0.0 --port 5000 --workers 2
+
+
+
 At this point (March 2025), the robot:
   - Is programmed with Python
   - Can be controlled through a web page (Flask server) which allows to control it via buttons on the web page, your keyboard or a bluetooth game controller.
