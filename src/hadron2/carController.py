@@ -451,7 +451,8 @@ try:
                     else:
                         logger.warning(f"Unknown command action: {command.action}")
                 except Exception as e:
-                    logger.error(f"Error processing command: {e}")
+                    #logger.error(f"Error processing command: {e}")
+                    pass
 
         def shutdown(self) -> None:
             """Shutdown the robot car, stopping all motors and terminating threads."""

@@ -8,20 +8,47 @@ import queue
 import threading
 import time
 from collections.abc import Callable, Generator
+import io
 
 import cv2
+import libcamera
+from libcamera import controls
+from picamera2 import Picamera2
+from picamera2.encoders import JpegEncoder, MJPEGEncoder
+from picamera2.outputs import FileOutput
+
 from config import config
+
+
+class StreamingOutput(io.BufferedIOBase):
+    """Sortie de streaming compatible avec picamera2"""
+    
+    def __init__(self):
+        self.frame = None
+        self.condition = threading.Condition()
+    
+    def write(self, buf):
+        # Cette méthode est appelée par l'encoder
+        with self.condition:
+            self.frame = buf
+            self.condition.notify_all()
+        return len(buf)
+
+    def flush(self):
+        pass
 
 
 class CameraService:
     """Service de capture vidéo optimisé pour la latence minimale"""
     
     def __init__(self):
-        self.camera: cv2.VideoCapture | None = None
+        self.camera: Picamera2 | None = None
         self.is_running = False
+        self.output = StreamingOutput()
         self.frame_queue = queue.Queue(maxsize=1)  # Buffer minimal
         self.capture_thread: threading.Thread | None = None
         self.logger = logging.getLogger(__name__)
+        self.encoder = None
         
         # Statistiques
         self.frames_captured = 0
@@ -41,20 +68,32 @@ class CameraService:
                 self.logger.info("Mode test: caméra désactivée")
                 return
             
-            self.camera = cv2.VideoCapture(config.camera.device_index)
+            self.camera = Picamera2()
             
-            if not self.camera.isOpened():
-                raise RuntimeError(f"Impossible d'ouvrir la caméra {config.camera.device_index}")
+            # Configuration de la caméra
+            video_config = self.camera.create_video_configuration(
+                main={
+                    "size": (config.camera.width, config.camera.height),
+                    "format": "RGB888"
+                },
+                buffer_count=config.camera.buffer_size,
+                controls={
+                    "FrameRate": config.camera.fps,
+                    "FrameDurationLimits": (int(1000000/config.camera.fps), int(1000000/config.camera.fps))
+                }
+            )
             
-            # Configuration optimisée pour la latence
-            self.camera.set(cv2.CAP_PROP_FRAME_WIDTH, config.camera.width)
-            self.camera.set(cv2.CAP_PROP_FRAME_HEIGHT, config.camera.height)
-            self.camera.set(cv2.CAP_PROP_FPS, config.camera.fps)
-            self.camera.set(cv2.CAP_PROP_BUFFERSIZE, config.camera.buffer_size)
+            # Application de la transformation (flip)
+            video_config["transform"] = libcamera.Transform(
+                hflip=config.camera.hflip, 
+                vflip=config.camera.vflip
+            )
             
-            # Propriétés pour réduire la latence
-            self.camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+            self.camera.configure(video_config)
             
+            # Créer l'encoder JPEG
+            self.encoder = JpegEncoder(q=config.camera.quality)
+                
             self.logger.info(f"Caméra initialisée: {config.camera.width}x{config.camera.height} @ {config.camera.fps}fps")
             
         except Exception as e:
@@ -78,56 +117,65 @@ class CameraService:
         frame_count = 0
         fps_start_time = time.time()
         
-        while self.is_running and self.camera:
-            try:
-                ret, frame = self.camera.read()
-                if not ret:
-                    self.logger.warning("Échec de capture de frame")
-                    time.sleep(0.01)
-                    continue
-                
-                # Encode la frame en JPEG
-                encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), config.camera.quality]
-                success, frame_data = cv2.imencode(".jpg", frame, encode_param)
-                
-                if not success:
-                    continue
-                
-                frame_bytes = frame_data.tobytes()
-                
-                # Met à jour la queue (supprime l'ancienne frame si pleine)
+        try:
+            # Démarrer l'enregistrement avec l'encoder et l'output
+            self.camera.start_recording(self.encoder, FileOutput(self.output))
+            self.logger.info("Démarrage de la capture vidéo")
+            
+            while self.is_running and self.camera:
                 try:
-                    self.frame_queue.put_nowait(frame_bytes)
-                    self.frames_captured += 1
-                except queue.Full:
-                    # Supprime l'ancienne frame et ajoute la nouvelle
-                    try:
-                        self.frame_queue.get_nowait()
-                        self.frames_dropped += 1
-                    except queue.Empty:
-                        pass
+                    # Attendre une nouvelle frame
+                    with self.output.condition:
+                        if self.output.condition.wait(timeout=1.0):
+                            if self.output.frame is not None:
+                                frame_bytes = self.output.frame
+                                
+                                # Met à jour la queue (supprime l'ancienne frame si pleine)
+                                try:
+                                    self.frame_queue.put_nowait(frame_bytes)
+                                    self.frames_captured += 1
+                                except queue.Full:
+                                    # Supprime l'ancienne frame et ajoute la nouvelle
+                                    try:
+                                        self.frame_queue.get_nowait()
+                                        self.frames_dropped += 1
+                                    except queue.Empty:
+                                        pass
+                                    
+                                    try:
+                                        self.frame_queue.put_nowait(frame_bytes)
+                                        self.frames_captured += 1
+                                    except queue.Full:
+                                        pass
+                                
+                                # Notifie les callbacks
+                                self._notify_frame_callbacks(frame_bytes)
+                                
+                                # Calcule le FPS
+                                frame_count += 1
+                                if frame_count % 30 == 0:  # Calcule le FPS toutes les 30 frames
+                                    current_time = time.time()
+                                    elapsed = current_time - fps_start_time
+                                    if elapsed > 0:
+                                        self.current_fps = 30 / elapsed
+                                    fps_start_time = current_time
+                        else:
+                            # Timeout - pas de nouvelle frame
+                            time.sleep(0.01)
+                            
+                except Exception as e:
+                    self.logger.error(f"Erreur dans la capture de frame: {e}")
+                    time.sleep(0.01)
                     
-                    try:
-                        self.frame_queue.put_nowait(frame_bytes)
-                        self.frames_captured += 1
-                    except queue.Full:
-                        pass
-                
-                # Notifie les callbacks
-                self._notify_frame_callbacks(frame_bytes)
-                
-                # Calcule le FPS
-                frame_count += 1
-                if frame_count % 30 == 0:  # Calcule le FPS toutes les 30 frames
-                    current_time = time.time()
-                    elapsed = current_time - fps_start_time
-                    if elapsed > 0:
-                        self.current_fps = 30 / elapsed
-                    fps_start_time = current_time
-                
-            except Exception as e:
-                self.logger.error(f"Erreur dans la capture de frame: {e}")
-                time.sleep(0.01)
+        except Exception as e:
+            self.logger.error(f"Erreur lors du démarrage de l'enregistrement: {e}")
+        finally:
+            # Arrêter l'enregistrement
+            if self.camera:
+                try:
+                    self.camera.stop_recording()
+                except:
+                    pass
     
     def start_capture(self) -> bool:
         """Démarre la capture vidéo"""
@@ -154,7 +202,7 @@ class CameraService:
         self.is_running = False
         
         if self.capture_thread:
-            self.capture_thread.join(timeout=1.0)
+            self.capture_thread.join(timeout=2.0)
         
         # Vide la queue
         while not self.frame_queue.empty():
@@ -194,14 +242,18 @@ class CameraService:
     
     def is_available(self) -> bool:
         """Vérifie si la caméra est disponible"""
-        return self.camera is not None and self.camera.isOpened()
+        return self.camera is not None
     
     def cleanup(self):
         """Nettoie les ressources de la caméra"""
         self.stop_capture()
         
         if self.camera:
-            self.camera.release()
+            try:
+                self.camera.close()
+                self.logger.info("Caméra fermée")
+            except:
+                pass
             self.camera = None
         
         self.logger.info("Caméra nettoyée")

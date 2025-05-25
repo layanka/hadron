@@ -15,6 +15,9 @@ class CameraConfig:
     buffer_size: int = 1  # Buffer minimal pour réduire la latence
     device_index: int = 0
     quality: int = 85  # Qualité JPEG (0-100)
+    vflip: int = 1  # Vertical flip
+    hflip: int = 1  # Horizontal flip
+    
 
 
 @dataclass
@@ -72,7 +75,7 @@ class WebConfig:
 @dataclass
 class MCPConfig:
     """Configuration du serveur MCP"""
-    host: str = "localhost"
+    host: str = "0.0.0.0"
     port: int = 8083
     websocket_path: str = "/mcp"
 
